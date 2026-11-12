@@ -1,4 +1,4 @@
-BeforeAll {
+﻿BeforeAll {
     . "$PSScriptRoot/../../InventarioForense.ps1"
     if (-not (Get-Command Get-WinEvent -ErrorAction SilentlyContinue)) { function global:Get-WinEvent { param($FilterHashtable) } }
     function New-EvtMsi {
@@ -408,7 +408,9 @@ Describe 'Vestigios parte 2' {
                 $o
             } -ParameterFilter { $ProgId -eq 'WScript.Shell' }
             $p = [pscustomobject]@{ SID = 'S-1'; Usuario = 'PC\ana'; Caminho = $perfil; Disponivel = $true }
-            $r = @(Get-VestigioAtalhos -Perfis @($p))
+            # No Windows real o Menu Iniciar comum e a Area de Trabalho publica tambem tem atalhos (Usuario vazio):
+            # so os do perfil de teste interessam.
+            $r = @(Get-VestigioAtalhos -Perfis @($p) | Where-Object { $_.Usuario -eq 'PC\ana' })
             $r.Count | Should -Be 1
             $r[0].Fonte | Should -Be 'Atalho'
             $r[0].Item | Should -Be 'Programa X'

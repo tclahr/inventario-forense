@@ -1,4 +1,4 @@
-BeforeAll {
+﻿BeforeAll {
   . "$PSScriptRoot/../../InventarioForense.ps1"
   $Script:Comum = [ordered]@{ Hostname = 'H'; IdEquipamento = 'ID'; DataColeta = '2026-11-12 14:30:00' }
   function Script:Novo-Caminho { Join-Path ([IO.Path]::GetTempPath()) ("csvtest_" + [guid]::NewGuid().ToString('N') + '\sub\x.csv') }

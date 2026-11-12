@@ -22,7 +22,7 @@ Describe 'Get-ArquivosAlvo' {
         $r[0] | Should -BeOfType [System.IO.FileInfo]
     }
 
-    It 'Nao segue link de diretorio' -Skip:($IsWindows -and -not $env:CF_TEST_SYMLINK) {
+    It 'Nao segue link de diretorio' -Skip:(($PSVersionTable.PSEdition -eq 'Desktop' -or $IsWindows) -and -not $env:CF_TEST_SYMLINK) {
         Novo-Arq (Join-Path $Script:R 'a.exe')
         $null = New-Item -ItemType SymbolicLink -Path (Join-Path $Script:R 'loop') -Target $Script:R
         $sw = [System.Diagnostics.Stopwatch]::StartNew()
@@ -45,7 +45,7 @@ Describe 'Get-ArquivosAlvo' {
         $r.Name | Should -Be 'k.exe'
     }
 
-    It 'Acesso negado contado' -Skip:($IsWindows -or (id -u) -eq '0') {
+    It 'Acesso negado contado' -Skip:(($PSVersionTable.PSEdition -eq 'Desktop' -or $IsWindows) -or (id -u) -eq '0') {
         Novo-Arq (Join-Path $Script:R 'ok.exe')
         $null = New-Item -ItemType Directory -Path (Join-Path $Script:R 'negado')
         chmod 000 (Join-Path $Script:R 'negado')

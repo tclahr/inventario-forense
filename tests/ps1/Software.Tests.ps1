@@ -1,4 +1,4 @@
-BeforeAll {
+﻿BeforeAll {
     . "$PSScriptRoot/../../InventarioForense.ps1"
     if (-not (Get-Command Get-AppxPackage -ErrorAction SilentlyContinue)) { function global:Get-AppxPackage { param([switch]$AllUsers) } }
     function New-CtxTeste { param([bool]$Admin = $false) $null = New-ContextoColeta -Parametros @{}; $Script:Ctx.Admin = $Admin }

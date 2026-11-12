@@ -1,4 +1,4 @@
-BeforeAll {
+﻿BeforeAll {
     . "$PSScriptRoot/../../InventarioForense.ps1"
     function New-ShimEntrada([string]$c,[datetime]$d){ $b=[Text.Encoding]::Unicode.GetBytes($c); $ms=New-Object IO.MemoryStream; $w=New-Object IO.BinaryWriter $ms
       $corpo=New-Object IO.MemoryStream; $wc=New-Object IO.BinaryWriter $corpo; $wc.Write([uint16]$b.Length); $wc.Write($b); $wc.Write([int64]$d.ToFileTime()); $wc.Write([uint32]0)

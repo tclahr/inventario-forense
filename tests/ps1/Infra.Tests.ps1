@@ -1,4 +1,4 @@
-BeforeAll { . "$PSScriptRoot/../../InventarioForense.ps1" }
+﻿BeforeAll { . "$PSScriptRoot/../../InventarioForense.ps1" }
 
 Describe 'Carga do script' {
   It 'dot-source nao executa o Main' { { . "$PSScriptRoot/../../InventarioForense.ps1" } | Should -Not -Throw; Get-Command Invoke-InventarioForense | Should -Not -BeNullOrEmpty }

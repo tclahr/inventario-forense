@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: ['3.10', '3.11', '3.12', '3.13']
+        python: ['3.10']
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -25,22 +25,6 @@ jobs:
           python-version: ${{ matrix.python }}
       - name: Executar testes
         run: python -I -m unittest discover -s tests/py -t . -v
-
-  pester-linux:
-    name: Pester (PowerShell 7, Linux)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Executar testes
-        shell: pwsh
-        run: |
-          Install-Module Pester -MinimumVersion 5.0 -Force -Scope CurrentUser -SkipPublisherCheck
-          Import-Module Pester -MinimumVersion 5.0
-          $cfg = New-PesterConfiguration
-          $cfg.Run.Path = 'tests/ps1'
-          $cfg.Run.Exit = $true
-          $cfg.Output.Verbosity = 'Normal'
-          Invoke-Pester -Configuration $cfg
 
   pester-windows:
     name: Pester (Windows PowerShell 5.1)

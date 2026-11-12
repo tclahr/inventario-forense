@@ -1,4 +1,4 @@
-BeforeAll {
+﻿BeforeAll {
     . "$PSScriptRoot/../../InventarioForense.ps1"
     if (-not (Get-Command reg.exe -ErrorAction SilentlyContinue)) { function reg.exe { } }
     if (-not (Get-Command Get-CimInstance -ErrorAction SilentlyContinue)) { function Get-CimInstance { param($ClassName) } }

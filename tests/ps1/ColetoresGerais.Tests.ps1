@@ -1,17 +1,21 @@
-BeforeAll {
+﻿BeforeAll {
     . "$PSScriptRoot/../../InventarioForense.ps1"
+    # Stubs sem tipos, sempre definidos: no Windows os mocks dos comandos reais herdam os
+    # parametros tipados (ex.: CimInstance) e rejeitam os objetos simples usados nos testes.
     foreach ($n in 'Get-PhysicalDisk', 'Get-LocalUser', 'Get-LocalGroupMember', 'Get-ScheduledTask', 'Get-ScheduledTaskInfo', 'Get-HotFix') {
-        if (-not (Get-Command $n -ErrorAction SilentlyContinue)) { Set-Item -Path "function:global:$n" -Value { param($TaskName, $TaskPath, $SID) } }
+        Set-Item -Path "function:global:$n" -Value { param($TaskName, $TaskPath, $SID) }
     }
-    if (-not (Get-Command Get-CimInstance -ErrorAction SilentlyContinue)) { function global:Get-CimInstance { param($ClassName, $Namespace, $Filter) } }
+    function global:Get-CimInstance { param($ClassName, $Namespace, $Filter) }
+    function global:Get-WmiObject { param($Class, $Namespace, $Filter) }
+    function global:Get-CimAssociatedInstance { param($InputObject, $ResultClassName) }
     if (-not (Get-Command netsh -ErrorAction SilentlyContinue)) { function global:netsh { } }
-    if (-not (Get-Command Get-CimAssociatedInstance -ErrorAction SilentlyContinue)) { function global:Get-CimAssociatedInstance { param($InputObject, $ResultClassName) } }
     function New-CtxTeste { param([bool]$Admin = $false) $null = New-ContextoColeta -Parametros @{}; $Script:Ctx.Admin = $Admin }
 }
 
 Describe 'Get-CimSafe' {
     It 'relanca a excecao original quando CIM e WMI falham' {
         Mock Get-CimInstance { throw 'falha cim' }
+        Mock Get-WmiObject { throw 'falha wmi' }
         { Get-CimSafe -ClassName Win32_BIOS } | Should -Throw '*falha cim*'
     }
 }

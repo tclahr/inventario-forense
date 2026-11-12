@@ -1,4 +1,4 @@
-BeforeAll {
+﻿BeforeAll {
   . "$PSScriptRoot/../../InventarioForense.ps1"
 
   function Set-MocksColeta {

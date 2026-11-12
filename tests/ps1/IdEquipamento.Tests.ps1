@@ -1,4 +1,4 @@
-BeforeAll { . "$PSScriptRoot/../../InventarioForense.ps1" }
+﻿BeforeAll { . "$PSScriptRoot/../../InventarioForense.ps1" }
 
 Describe 'Get-IdEquipamento' {
     It 'Origem formatada' {
