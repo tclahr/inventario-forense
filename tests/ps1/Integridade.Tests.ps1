@@ -58,7 +58,7 @@ Describe 'Integridade' {
   It 'Divergencia mantem a pasta' {
     $null = Write-Manifesto -Pasta $Script:Pasta
     $zip = New-ZipColeta -Pasta $Script:Pasta
-    Test-ZipContraManifesto -Zip $zip | Select-Object -ExpandProperty Ok | Should -BeTrue
+    (Test-ZipContraManifesto -Zip $zip).Ok | Should -BeTrue
     $a = [IO.Compression.ZipFile]::Open($zip, 'Update')
     try {
       $e = $a.Entries | Where-Object { $_.FullName -match 'Coleta\.txt$' } | Select-Object -First 1
