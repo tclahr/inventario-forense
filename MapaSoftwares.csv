@@ -1,0 +1,102 @@
+﻿Padrao;Produto;Fabricante;Categoria;Ignorar
+Microsoft.VCLibs*;;;Runtime;Sim
+Microsoft.NET.*;;;Runtime;Sim
+Microsoft.WindowsAppRuntime*;;;Runtime;Sim
+Microsoft.UI.Xaml*;;;Runtime;Sim
+Microsoft.WidgetsPlatformRuntime*;;;Runtime;Sim
+Microsoft.*Extension*;;;Runtime;Sim
+Microsoft Visual C++ *;;;Runtime;Sim
+Microsoft .NET *;;;Runtime;Sim
+Microsoft Edge WebView2*;;;Runtime;Sim
+Microsoft GameInput*;;;Runtime;Sim
+Microsoft.Windows*;;;Sistema;Sim
+MicrosoftWindows.*;;;Sistema;Sim
+Windows.*;;;Sistema;Sim
+Microsoft Windows Application Compatibility*;;;Sistema;Sim
+Microsoft Update Health Tools*;;;Sistema;Sim
+Microsoft.Xbox*;;;Sistema;Sim
+Microsoft.AAD.BrokerPlugin*;;;Sistema;Sim
+Microsoft.AccountsControl*;;;Sistema;Sim
+Microsoft.AIFabric*;;;Sistema;Sim
+Microsoft.LockApp*;;;Sistema;Sim
+Microsoft.Services.Store*;;;Sistema;Sim
+Microsoft.DesktopAppInstaller*;;;Sistema;Sim
+Microsoft.StorePurchaseApp*;;;Sistema;Sim
+Microsoft.Win32WebViewHost*;;;Sistema;Sim
+Microsoft.ECApp*;;;Sistema;Sim
+Microsoft.CredDialogHost*;;;Sistema;Sim
+Microsoft.AsyncTextService*;;;Sistema;Sim
+Microsoft.BioEnrollment*;;;Sistema;Sim
+Microsoft.Ink.*;;;Sistema;Sim
+Microsoft.ApplicationCompatibilityEnhancements*;;;Sistema;Sim
+Microsoft.MicrosoftEdgeDevToolsClient*;;;Sistema;Sim
+Microsoft.Winget.*;;;Sistema;Sim
+Microsoft.GetHelp*;;;Sistema;Sim
+Microsoft.BingSearch*;;;Sistema;Sim
+Microsoft.SecHealthUI*;;;Sistema;Sim
+Microsoft.LanguageExperiencePack*;;;Sistema;Sim
+re:^NVIDIA( |$);;;Driver;Sim
+NVIDIACorp.*;;;Driver;Sim
+Realtek*;;;Driver;Sim
+re:^Intel(\(R\)|®)?( |$);;;Driver;Sim
+AppUp.*;;;Driver;Sim
+Dolby*;;;Driver;Sim
+Synaptics*;;;Driver;Sim
+Application Data;;;Sistema;Sim
+Dados de Aplicativos;;;Sistema;Sim
+Local Settings;;;Sistema;Sim
+Configurações Locais;;;Sistema;Sim
+My Documents;;;Sistema;Sim
+Meus Documentos;;;Sistema;Sim
+Documents;;;Sistema;Sim
+Documentos;;;Sistema;Sim
+Desktop;;;Sistema;Sim
+Área de Trabalho;;;Sistema;Sim
+Templates;;;Sistema;Sim
+Modelos;;;Sistema;Sim
+Start Menu;;;Sistema;Sim
+Menu Iniciar;;;Sistema;Sim
+Programs;;;Sistema;Sim
+Programas;;;Sistema;Sim
+Cookies;;;Sistema;Sim
+Recent;;;Sistema;Sim
+SendTo;;;Sistema;Sim
+NetHood;;;Sistema;Sim
+Ambiente de Rede;;;Sistema;Sim
+PrintHood;;;Sistema;Sim
+Ambiente de Impressão;;;Sistema;Sim
+History;;;Sistema;Sim
+Histórico;;;Sistema;Sim
+Temporary Internet Files;;;Sistema;Sim
+Favorites;;;Sistema;Sim
+Favoritos;;;Sistema;Sim
+Arquivos Comuns;;;Sistema;Sim
+System;;;Sistema;Sim
+Sistema;;;Sistema;Sim
+Publishers;;;Sistema;Sim
+PlaceholderTileLogoFolder;;;Sistema;Sim
+VirtualStore;;;Sistema;Sim
+SoftwareDistribution;;;Sistema;Sim
+USOShared;;;Sistema;Sim
+USOPrivate;;;Sistema;Sim
+D3DSCache;;;Sistema;Sim
+ssh;;;Sistema;Sim
+WindowsPowerShell;;;Sistema;Sim
+WindowsPerformanceRecorder;;;Sistema;Sim
+Whesvc;;;Sistema;Sim
+IdentityService;;;Sistema;Sim
+regid.*;;;Sistema;Sim
+Packages;;;Sistema;Sim
+ConnectedDevicesPlatform;;;Sistema;Sim
+PeerDistRepub;;;Sistema;Sim
+Comms;;;Sistema;Sim
+CrashDumps;;;Sistema;Sim
+Temp;;;Sistema;Sim
+re:^AppDataLow( |$);;;Sistema;Sim
+re:^MozillaPlugins( |$);;;Sistema;Sim
+re:^OEM( |$);;;Sistema;Sim
+re:^SyncIntegrationClients( |$);;;Sistema;Sim
+re:^ChangeTracker( |$);;;Sistema;Sim
+re:^OpenSSH\s;;;Sistema;Sim
+re:^Netscape( |$);;;Sistema;Sim
+re:^Chromium\s;;;Sistema;Sim
