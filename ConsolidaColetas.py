@@ -1803,10 +1803,8 @@ _MODELO_HTML = r'''<!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Consolidação de Coletas</title>
 <meta name="author" content="Thiago Canozzo Lahr">
-<meta name="generator" content="ConsolidaColetas (https://github.com/tclahr/inventario-forense)">
-<link rel="author" href="https://github.com/tclahr">
-<link rel="canonical" href="https://github.com/tclahr/inventario-forense">
-<!-- Autor: Thiago Canozzo Lahr | Repositorio: https://github.com/tclahr/inventario-forense | Licenca: Apache-2.0 -->
+<meta name="generator" content="ConsolidaColetas.py (github.com/tclahr/inventario-forense)">
+<!-- Autor: Thiago Canozzo Lahr | Repositorio: github.com/tclahr/inventario-forense | Licenca: Apache-2.0 -->
 <style>
 :root {
   --fundo: #ffffff; --texto: #1d2329; --suave: #5b6670; --borda: #d5dbe0;
