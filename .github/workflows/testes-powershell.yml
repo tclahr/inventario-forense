@@ -1,31 +1,24 @@
-name: Testes
+name: Testes PowerShell
 
 on:
   push:
     branches: [main]
+    paths:
+      - 'InventarioForense.ps1'
+      - 'tests/ps1/**'
+      - '.github/workflows/testes-powershell.yml'
   pull_request:
     branches: [main]
+    paths:
+      - 'InventarioForense.ps1'
+      - 'tests/ps1/**'
+      - '.github/workflows/testes-powershell.yml'
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  python:
-    name: Python ${{ matrix.python }} (ConsolidaColetas.py)
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python: ['3.10']
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python }}
-      - name: Executar testes
-        run: python -I -m unittest discover -s tests/py -t . -v
-
   pester-windows:
     name: Pester (Windows PowerShell 5.1)
     runs-on: windows-latest
