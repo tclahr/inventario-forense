@@ -1819,7 +1819,21 @@ _MODELO_HTML = r'''<!DOCTYPE html>
 body { margin: 0; background: var(--fundo); color: var(--texto);
   font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
 header { padding: 14px 20px 0; }
-h1 { font-size: 20px; margin: 0 0 10px; }
+.topo { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin: 0 0 10px; }
+h1 { font-size: 20px; margin: 0; }
+.busca-global { position: relative; margin-left: auto; }
+.busca-global input { padding: 6px 10px; border: 1px solid var(--borda); border-radius: 4px;
+  background: var(--fundo); width: 320px; max-width: 100%; }
+#resultados-globais { position: absolute; right: 0; top: calc(100% + 4px); z-index: 10; width: min(720px, 92vw);
+  max-height: 70vh; overflow: auto; background: var(--fundo); border: 1px solid var(--borda);
+  border-radius: 6px; box-shadow: 0 6px 20px rgba(0,0,0,.25); padding: 8px 12px; }
+#resultados-globais h3 { font-size: 13px; margin: 10px 0 4px; display: flex; gap: 8px; align-items: baseline; }
+#resultados-globais h3:first-child { margin-top: 0; }
+#resultados-globais ul { list-style: none; margin: 0; padding: 0; }
+#resultados-globais li button { all: unset; display: block; width: 100%; box-sizing: border-box; padding: 3px 6px;
+  border-radius: 4px; cursor: pointer; word-break: break-word; }
+#resultados-globais li button:hover, #resultados-globais li button:focus-visible { background: var(--painel); outline: 1px solid var(--destaque); }
+#resultados-globais mark { background: var(--aviso-fundo); color: inherit; border-bottom: 1px solid var(--aviso-borda); }
 h2 { font-size: 16px; margin: 22px 0 8px; }
 nav[role=tablist] { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--borda); }
 nav button { border: 1px solid var(--borda); border-bottom: none; background: var(--painel);
@@ -1857,7 +1871,7 @@ button.expandir { width: 26px; padding: 0; border: 1px solid var(--borda); borde
 .totais span { color: var(--suave); }
 .nota { color: var(--suave); }
 @media print {
-  nav, .controles, button.mais, button.expandir, .sem-impressao { display: none !important; }
+  nav, .busca-global, .controles, button.mais, button.expandir, .sem-impressao { display: none !important; }
   button.link { color: inherit; text-decoration: none; }
   thead th { position: static; }
   body { font-size: 11px; }
@@ -1867,7 +1881,13 @@ button.expandir { width: 26px; padding: 0; border: 1px solid var(--borda); borde
 </head>
 <body>
 <header>
+<div class="topo">
 <h1>Consolidação de Coletas</h1>
+<div class="busca-global" role="search">
+<input type="search" id="busca-global" placeholder="Buscar em todo o relatório..." aria-label="Buscar em todo o relatório" autocomplete="off" aria-controls="resultados-globais">
+<div id="resultados-globais" role="region" aria-label="Resultados da busca global" aria-live="polite" hidden></div>
+</div>
+</div>
 <nav role="tablist" aria-label="Seções do relatório">
 <button type="button" role="tab" id="aba-geral" aria-controls="painel-geral" aria-selected="true">Visão geral</button>
 <button type="button" role="tab" id="aba-maquinas" aria-controls="painel-maquinas" aria-selected="false" tabindex="-1">Máquinas</button>
@@ -2229,6 +2249,123 @@ function abrirFicha(id) {
   desenharFicha(id);
   window.scrollTo(0, 0);
 }
+
+/* Busca global */
+var cacheGlobal = new WeakMap();
+function fontesGlobais() {
+  var ex = D.execucao || {};
+  var f = [
+    {titulo: 'Alertas', aba: 'geral', linhas: lista(D.alertas)},
+    {titulo: 'Execução', aba: 'geral', linhas: Object.keys(ex).map(function (k) { return {Chave: k, Valor: ex[k]}; })},
+    {titulo: 'Máquinas', aba: 'maquinas', linhas: maquinas},
+    {titulo: 'Catálogo de softwares', aba: 'softwares', linhas: lista(D.catalogo)},
+    {titulo: 'Softwares por máquina', aba: 'softwares', linhas: softwares},
+    {titulo: 'Vestígios por produto', aba: 'vestigios', linhas: lista(D.vestigios_produto)},
+    {titulo: 'Vestígios por máquina', aba: 'vestigios', linhas: vestigios},
+    {titulo: 'Instaladores', aba: 'instaladores', linhas: instaladores},
+    {titulo: 'Licenças', aba: 'licencas', linhas: lista(D.licencas)}
+  ];
+  var nomes = {hardware: 'Hardware', volumes: 'Volumes', rede: 'Rede', instaladores: 'Instaladores (ficha)'};
+  var porGrupo = {resumo: []};
+  Object.keys(nomes).forEach(function (k) { porGrupo[k] = []; });
+  Object.keys(fichas).forEach(function (id) {
+    var h = fichas[id] || {};
+    var m = maquinas.filter(function (x) { return x.IdColeta === id; })[0] || {};
+    var quem = m.Hostname || id;
+    var resumo = h.resumo || {};
+    Object.keys(resumo).forEach(function (k) { porGrupo.resumo.push({IdColeta: id, Máquina: quem, Campo: k, Valor: resumo[k]}); });
+    Object.keys(nomes).forEach(function (k) {
+      lista(h[k]).forEach(function (r) { porGrupo[k].push(Object.assign({IdColeta: id}, r)); });
+    });
+  });
+  f.push({titulo: 'Ficha: resumo', aba: 'ficha', linhas: porGrupo.resumo});
+  Object.keys(nomes).forEach(function (k) { f.push({titulo: 'Ficha: ' + nomes[k], aba: 'ficha', linhas: porGrupo[k]}); });
+  return f;
+}
+var globais = null;
+function textoGlobal(r) {
+  var t = cacheGlobal.get(r);
+  if (t === undefined) {
+    t = Object.keys(r).map(function (k) { return normalizar(r[k] == null ? '' : r[k]); });
+    cacheGlobal.set(r, t);
+  }
+  return t;
+}
+function irParaAba(aba, termo) {
+  ativar(document.getElementById('aba-' + aba), false);
+  var campo = document.querySelector('#painel-' + aba + ' input[type=search]');
+  if (campo) { campo.value = termo; campo.dispatchEvent(new Event('input')); }
+  window.scrollTo(0, 0);
+}
+function realcar(valor, termos) {
+  var v = String(valor), n = normalizar(v), marcas = [];
+  if (n.length !== v.length) return document.createTextNode(v);
+  termos.forEach(function (t) {
+    var i = n.indexOf(t);
+    while (i >= 0) { marcas.push([i, i + t.length]); i = n.indexOf(t, i + t.length); }
+  });
+  if (!marcas.length) return document.createTextNode(v);
+  marcas.sort(function (a, b) { return a[0] - b[0]; });
+  var frag = document.createDocumentFragment(), pos = 0;
+  marcas.forEach(function (m) {
+    if (m[1] <= pos) return;
+    var ini = Math.max(m[0], pos);
+    if (ini > pos) frag.appendChild(document.createTextNode(v.slice(pos, ini)));
+    frag.appendChild(el('mark', {text: v.slice(ini, m[1])}));
+    pos = m[1];
+  });
+  if (pos < v.length) frag.appendChild(document.createTextNode(v.slice(pos)));
+  return frag;
+}
+(function () {
+  var campo = document.getElementById('busca-global');
+  var caixa = document.getElementById('resultados-globais');
+  var MAX_POR_GRUPO = 8;
+  var espera = null;
+  function fechar() { caixa.hidden = true; }
+  function buscar() {
+    var bruto = campo.value.trim();
+    var termos = normalizar(bruto).split(/\s+/).filter(Boolean);
+    caixa.textContent = '';
+    if (bruto.length < 2) { fechar(); return; }
+    globais = globais || fontesGlobais();
+    var total = 0;
+    globais.forEach(function (g) {
+      var achadas = g.linhas.filter(function (r) {
+        var cols = textoGlobal(r), junto = cols.join('\u0001');
+        return termos.every(function (x) { return junto.indexOf(x) >= 0; });
+      });
+      if (!achadas.length) return;
+      total += achadas.length;
+      caixa.appendChild(el('h3', null, [g.titulo, el('span', {'class': 'contador', text: numero.format(achadas.length) + ' resultado(s)'}),
+        el('button', {type: 'button', 'class': 'link', text: 'Abrir aba', onclick: function () { irParaAba(g.aba, bruto); fechar(); }})]));
+      var ul = el('ul');
+      achadas.slice(0, MAX_POR_GRUPO).forEach(function (r) {
+        var chaves = Object.keys(r).filter(function (k) { return k !== 'IdColeta' && r[k] !== '' && r[k] != null; });
+        var casam = chaves.filter(function (k) {
+          var n = normalizar(r[k]); return termos.some(function (x) { return n.indexOf(x) >= 0; });
+        });
+        var mostrar = casam.concat(chaves.filter(function (k) { return casam.indexOf(k) < 0; })).slice(0, 4);
+        var linha = el('span');
+        mostrar.forEach(function (k, i) {
+          if (i) linha.appendChild(document.createTextNode(' · '));
+          linha.appendChild(el('strong', {text: k + ': '}));
+          linha.appendChild(realcar(String(r[k]).slice(0, 160), termos));
+        });
+        var id = r.IdColeta && fichas[r.IdColeta] ? r.IdColeta : idDaLinha(r);
+        ul.appendChild(el('li', null, [el('button', {type: 'button', title: id ? 'Abrir a ficha da máquina' : 'Abrir a aba com este termo',
+          onclick: function () { fechar(); if (id) abrirFicha(id); else irParaAba(g.aba, bruto); }}, [linha])]));
+      });
+      caixa.appendChild(ul);
+    });
+    if (!total) caixa.appendChild(el('p', {'class': 'nota', text: 'Nenhum resultado para “' + bruto + '”.'}));
+    caixa.hidden = false;
+  }
+  campo.addEventListener('input', function () { clearTimeout(espera); espera = setTimeout(buscar, 200); });
+  campo.addEventListener('focus', function () { if (campo.value.trim().length >= 2 && caixa.childNodes.length) caixa.hidden = false; });
+  campo.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') { fechar(); campo.blur(); } });
+  document.addEventListener('click', function (ev) { if (!ev.target.closest || !ev.target.closest('.busca-global')) fechar(); });
+})();
 
 ativar(abas[0], false);
 })();
