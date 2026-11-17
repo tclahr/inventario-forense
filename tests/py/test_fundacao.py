@@ -27,17 +27,20 @@ class TestFundacao(unittest.TestCase):
             self.assertEqual(cc.AREAS[num].arquivo, arquivo)
             self.assertEqual(list(cc.AREAS[num].colunas), colunas)
 
-    def test_descobrir_zips_so_prefixo_inventarioforense(self):
+    def test_descobrir_zips_so_com_coleta_json(self):
+        import zipfile
         with tempfile.TemporaryDirectory() as t:
             raiz = Path(t)
-            for nome in ('InventarioForense_A_1.zip', 'ColetaForense_B_1.zip', 'Outro_C_1.zip'):
-                (raiz / nome).write_bytes(b'x')
+            for nome, interno in (('InventarioForense_A_1.zip', 'InventarioForense_A_1/Coleta.json'),
+                                  ('Qualquer_B_1.zip', 'Qualquer_B_1/Coleta.json'),
+                                  ('SemLog_C_1.zip', 'SemLog_C_1/outro.txt'),
+                                  ('InventarioForense_D_1.zip', 'InventarioForense_D_1/x/y/Coleta.json')):
+                with zipfile.ZipFile(raiz / nome, 'w') as zf:
+                    zf.writestr(interno, 'x')
+            (raiz / 'Invalido_E_1.zip').write_bytes(b'x')
             (raiz / 'InventarioForense_dir.zip').mkdir()
             achados = [p.name for p in cc.descobrir_zips(raiz)]
-        self.assertEqual(achados, ['InventarioForense_A_1.zip'])
-        self.assertEqual(cc._hostname_do_nome('InventarioForense_PC-01_1'), 'PC-01')
-        self.assertEqual(cc._hostname_do_nome('ColetaForense_PC-02_1'), '')
-        self.assertEqual(cc._hostname_do_nome('Outro_PC-03_1'), '')
+        self.assertEqual(achados, ['InventarioForense_A_1.zip', 'Qualquer_B_1.zip'])
 
     def test_csv_ida_e_volta(self):
         valor = {'A': '"C:\\Program Files\\7-Zip\\Uninstall.exe"', 'B': 'x;y\r\nz ção'}

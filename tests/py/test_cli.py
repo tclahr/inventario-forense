@@ -91,7 +91,7 @@ class TestFluxo(Base):
         self.addCleanup(con.close)
         self.assertEqual(con.execute('SELECT COUNT(*) FROM v_resumo').fetchone()[0], 2)
         self.assertEqual(con.execute("SELECT Valor FROM execucao WHERE Chave='VersaoScript'")
-                         .fetchone()[0], '1.0.0')
+                         .fetchone()[0], cc.VERSAO)
         alertas = ler_csv_saida(pasta / 'csv' / 'A_Alertas.csv')
         self.assertIn('ColetaRejeitada', [a['Tipo'] for a in alertas])
         log = (pasta / 'Consolidacao.log').read_bytes()

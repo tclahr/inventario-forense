@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ConsolidaColetas: consolida pacotes InventarioForense_*.zip em tabelas CSV e relatorios.
+"""ConsolidaColetas: consolida pacotes de coleta (*.zip com Coleta.json) em tabelas CSV e relatorios.
 
 Somente biblioteca padrao (Python 3.10+).
 
@@ -34,7 +34,7 @@ from typing import Dict, Iterable, List, Mapping, NamedTuple, Optional, Sequence
 
 csv.field_size_limit(min(sys.maxsize, 2**31 - 1))
 
-VERSAO = '1.0.0'
+VERSAO = '1.1.0'
 AUTOR = 'Thiago Canozzo Lahr'
 EMAIL_AUTOR = 'thiago@peritoemti.com.br'
 COLUNAS_COMUNS = ('Hostname', 'IdEquipamento', 'DataColeta')
@@ -330,6 +330,7 @@ class Verificacao:
     raiz: str = ''
     entradas: Dict[str, str] = field(default_factory=dict)
     erro_fatal: str = ''
+    hostname: str = ''
     motivos: List[str] = field(default_factory=list)
 
 
@@ -408,6 +409,7 @@ def verificar_zip(caminho: Path) -> Verificacao:
                 v.erro_fatal = f'ZIP com entrada duplicada: {sorted(duplicadas)[0][len(prefixo):]}'
                 return v
             v.entradas = {n[len(prefixo):]: real for n, real in reais.items()}
+            v.hostname = _hostname_do_json(zf, v)
             esperado = v.entradas.get('SHA256SUMS.txt')
             if esperado is None:
                 v.motivos.append('Sem SHA256SUMS.txt')
@@ -438,10 +440,23 @@ def verificar_zip(caminho: Path) -> Verificacao:
     return v
 
 
+def _tem_coleta_json(caminho: Path) -> bool:
+    """True se o ZIP tem um Coleta.json na raiz ou na pasta raiz da coleta."""
+    try:
+        with zipfile.ZipFile(caminho) as zf:
+            for nome in zf.namelist():
+                partes = nome.replace('\\', '/').split('/')
+                if partes[-1] == 'Coleta.json' and len(partes) <= 2:
+                    return True
+    except Exception:
+        return False
+    return False
+
+
 def descobrir_zips(entrada: Path) -> List[Path]:
-    """InventarioForense_*.zip da pasta (nao recursivo), so arquivos regulares, em ordem de nome."""
+    """*.zip da pasta (nao recursivo) que contem Coleta.json, so arquivos regulares, em ordem de nome."""
     raiz = Path(entrada)
-    zips = [p for p in raiz.glob('InventarioForense_*.zip') if p.is_file()]
+    zips = [p for p in raiz.glob('*.zip') if p.is_file() and _tem_coleta_json(p)]
     return sorted(zips, key=lambda p: p.name)
 
 
@@ -467,8 +482,7 @@ COLUNAS_COLETAS = ('IdColeta', 'Arquivo', 'Hostname', 'IdEquipamento', 'DataCole
                     'Situacao', 'SubstituidaPor', 'MotivoSelecao', 'Motivo')
 
 
-def abrir_base(caminho: Path) -> sqlite3.Connection:
-    con = sqlite3.connect(str(caminho))
+def _criar_esquema(con: sqlite3.Connection) -> None:
     con.execute('PRAGMA journal_mode=MEMORY')
     con.execute('PRAGMA synchronous=OFF')
     for area in AREAS.values():
@@ -477,6 +491,27 @@ def abrir_base(caminho: Path) -> sqlite3.Connection:
     defs = ', '.join(q(c) + (' TEXT PRIMARY KEY' if c == 'IdColeta' else ' TEXT')
                      for c in COLUNAS_COLETAS)
     con.execute(f'CREATE TABLE coletas ({defs})')
+
+
+def abrir_base(caminho: Path) -> sqlite3.Connection:
+    """Cria a base. Em filesystems sem lock de arquivo (CIFS, NFS sem lockd) o SQLite falha
+    com 'database is locked'; como a base tem um unico escritor, repete sem lock."""
+    con = sqlite3.connect(str(caminho))
+    try:
+        _criar_esquema(con)
+        return con
+    except sqlite3.OperationalError as e:
+        con.close()
+        if 'locked' not in str(e) or str(caminho) == ':memory:':
+            raise
+    log.warning('Sem lock de arquivo em %s; abrindo a base sem lock (escritor unico)', caminho)
+    Path(caminho).unlink()
+    con = sqlite3.connect(Path(caminho).resolve().as_uri() + '?nolock=1', uri=True)
+    try:
+        _criar_esquema(con)
+    except Exception:
+        con.close()
+        raise
     return con
 
 
@@ -544,7 +579,7 @@ class Coleta:
 
     @property
     def hostname(self) -> str:
-        return self.resumo.get('Hostname', '') or _hostname_do_nome(self.verificacao.id_coleta)
+        return self.verificacao.hostname or self.resumo.get('Hostname', '')
 
     @property
     def id_equipamento(self) -> str:
@@ -567,11 +602,17 @@ class Coleta:
         return self.situacao != 'NaoVerificada'
 
 
-def _hostname_do_nome(id_coleta: str) -> str:
-    prefixo = 'InventarioForense_'
-    if id_coleta.startswith(prefixo):
-        return id_coleta[len(prefixo):].split('_', 1)[0]
-    return ''
+def _hostname_do_json(zf: zipfile.ZipFile, v: Verificacao) -> str:
+    """Hostname de Identificacao em Coleta.json (nunca do nome do ZIP); vazio se ilegivel."""
+    real = v.entradas.get('Coleta.json')
+    if real is None:
+        return ''
+    try:
+        dados = json.loads(zf.read(real).decode('utf-8-sig'))
+        h = dados['Identificacao']['Hostname']
+    except Exception:
+        return ''
+    return h.strip() if isinstance(h, str) else ''
 
 
 def _itens_lista(texto: str) -> List[str]:
@@ -639,8 +680,8 @@ def _carregar_coleta(con: sqlite3.Connection, v: Verificacao, situacao: str,
         if len(linhas_resumo) != 1:
             return _rejeitar(v, f'Resumo com {len(linhas_resumo)} linhas')
         resumo = dict(linhas_resumo[0])
-        if not resumo.get('Hostname'):
-            resumo['Hostname'] = _hostname_do_nome(v.id_coleta)
+        if v.hostname:
+            resumo['Hostname'] = v.hostname
         coleta = Coleta(v, situacao, motivo, resumo, [])
         alertas: List[Alerta] = []
 
@@ -1610,8 +1651,10 @@ def gravar_analises(con: sqlite3.Connection, analises: Dict[str, tuple]) -> None
 def exportar_consolidados(con: sqlite3.Connection, pasta_csv: Path) -> None:
     for area in AREAS.values():
         cols = _colunas_tabela(area)
-        cur = con.execute(f"SELECT {', '.join(q(c) for c in cols)} FROM {q('v_' + area.tabela)} "
-                          f"ORDER BY rowid")
+        # A view nao expoe rowid; le a tabela com o mesmo filtro da view para manter a ordem de carga.
+        cur = con.execute(f"SELECT {', '.join(q(c) for c in cols)} FROM {q(area.tabela)} "
+                          f"WHERE IdColeta IN (SELECT IdColeta FROM coletas "
+                          f"WHERE Situacao IN ('Usada','NaoVerificada')) ORDER BY rowid")
         linhas = (dict(zip(cols, r)) for r in cur)
         escrever_csv(Path(pasta_csv) / area.arquivo, cols, linhas)
 
@@ -2478,13 +2521,13 @@ class _Parser(argparse.ArgumentParser):
 def _montar_parser() -> argparse.ArgumentParser:
     p = _Parser(
         prog='ConsolidaColetas.py', add_help=False, formatter_class=_FormatoAjuda,
-        description='Consolida pacotes InventarioForense_*.zip em tabelas CSV, SQLite e relatorio HTML.')
+        description='Consolida pacotes de coleta (*.zip com Coleta.json) em tabelas CSV, SQLite e relatorio HTML.')
     p._positionals.title = 'argumentos posicionais'
     p._optionals.title = 'opcoes'
     p.add_argument('-h', '--help', '--ajuda', action='help', default=argparse.SUPPRESS,
                    help='mostra esta ajuda e termina')
     p.add_argument('pasta_entrada', nargs='?',
-                   help='pasta com os InventarioForense_*.zip e .zip.sha256 (nao recursiva)')
+                   help='pasta com os .zip de coleta (com Coleta.json) e .zip.sha256 (nao recursiva)')
     p.add_argument('-o', dest='saida', metavar='PASTA_SAIDA',
                    help='pasta onde sera criada Consolidacao_<AAAAMMDDHHMMSS>/ '
                         '(padrao: a pasta de entrada)')
@@ -2543,7 +2586,7 @@ def main(argv=None) -> int:
     if not entrada.is_dir():
         return erro(f'a pasta de entrada {entrada} nao existe')
     if not descobrir_zips(entrada):
-        return erro(f'nenhum InventarioForense_*.zip em {entrada}')
+        return erro(f'nenhum .zip de coleta (com Coleta.json) em {entrada}')
     try:
         mapa = Mapa.carregar(Path(args.mapa) if args.mapa else None,
                              Path(__file__).resolve().parent)

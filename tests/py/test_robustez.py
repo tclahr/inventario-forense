@@ -127,7 +127,7 @@ class TestZipDanificado(Base):
         with mock.patch.object(cc, 'sha256_arquivo', side_effect=falha):
             codigo, pasta = self.rodar()
         self.assertEqual(codigo, 1)
-        self.assertEqual(self.situacoes(pasta), {'PCA': 'Usada', 'PCB': 'Rejeitada'})
+        self.assertEqual(self.situacoes(pasta), {'PCA': 'Usada', '': 'Rejeitada'})
 
     def test_consolidar_verificacao_com_erro_inesperado(self):
         fabrica.nova_coleta(self.entrada, hostname='PCA', id_equipamento=ID_A, areas=SW)
@@ -142,7 +142,7 @@ class TestZipDanificado(Base):
         with mock.patch.object(cc, 'verificar_zip', side_effect=falha):
             codigo, pasta = self.rodar()
         self.assertEqual(codigo, 1)
-        self.assertEqual(self.situacoes(pasta), {'PCA': 'Usada', 'PCB': 'Rejeitada'})
+        self.assertEqual(self.situacoes(pasta), {'PCA': 'Usada', '': 'Rejeitada'})
 
     def test_pasta_com_nome_de_zip_ignorada(self):
         (self.entrada / 'InventarioForense_x.zip').mkdir(parents=True)
