@@ -68,6 +68,13 @@ class TestHtml(Base):
             self.assertIn('>' + aba + '</button>', html)
         self.assertIn(cc.AVISO_CRUZAMENTO, html)
 
+    def test_busca_global_no_cabecalho(self):
+        html = self.gerar(_dados_minimos())
+        self.assertIn('id="busca-global"', html)
+        self.assertIn('id="resultados-globais"', html)
+        self.assertLess(html.index('id="busca-global"'), html.index('role="tablist"'))
+        self.assertIn('.busca-global', html.split('@media print')[1])
+
     def test_expandir_agrupa_produto_sem_caixa(self):
         js = cc._MODELO_HTML
         self.assertIn('function chaveProduto(s) { return String(s == null ? \'\' : s).toLowerCase(); }', js)
