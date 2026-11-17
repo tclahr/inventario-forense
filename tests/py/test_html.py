@@ -156,9 +156,11 @@ class TestHtml(Base):
         execucao = {'VersaoScript': cc.VERSAO, 'Autor': cc.AUTOR, 'EmailAutor': cc.EMAIL_AUTOR,
                     'Outro': 'Autor ' + cc.AUTOR, 'Contato': f'x <{cc.EMAIL_AUTOR}>'}
         html = self.gerar(cc.dados_html(self.con, [c], {}, execucao))
-        self.assertNotIn(cc.AUTOR, html)
-        self.assertNotIn(cc.EMAIL_AUTOR, html)
-        self.assertIn('VersaoScript', html)
+        # O <head> traz autor e repositorio de proposito; os dados nao podem vazar o autor.
+        corpo = html.split('</head>', 1)[1]
+        self.assertNotIn(cc.AUTOR, corpo)
+        self.assertNotIn(cc.EMAIL_AUTOR, corpo)
+        self.assertIn('VersaoScript', corpo)
 
     def test_instaladores_da_ficha_por_coleta(self):
         c1, _ = self.carregar(hostname='PC1', areas={'15': [{'Arquivo': 'a.exe', 'SHA256': 'aa'}]})
