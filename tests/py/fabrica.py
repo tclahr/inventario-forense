@@ -51,7 +51,7 @@ def nova_coleta(pasta: Path, hostname='PC1', id_equipamento='A' * 64, data='2026
         linhas = [dict(comuns, **l) for l in linhas]
         arquivos[f'csv/{area.arquivo}'] = _csv_bytes(list(cc.COLUNAS_COMUNS) + cols, linhas)
     arquivos['Coleta.txt'] = f'Coleta {hostname} {data}\r\n'.encode('utf-8')
-    arquivos['Coleta.json'] = json.dumps({'Hostname': hostname, 'Modo': modo}).encode('utf-8')
+    arquivos['Coleta.json'] = json.dumps({'Identificacao': {'Hostname': hostname}, 'Execucao': {'Modo': modo}}).encode('utf-8')
     arquivos['Coleta.log'] = b'\xef\xbb\xbf[log] inicio\r\n'
     arquivos.update(extras or {})
     soma = ''.join(f'{hashlib.sha256(arquivos[k]).hexdigest()}  {k}\n' for k in sorted(arquivos))

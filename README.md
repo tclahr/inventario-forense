@@ -173,7 +173,7 @@ python3 ConsolidaColetas.py ./coletas -o ./relatorios
 
 | Opção | Descrição |
 |-------|-----------|
-| `pasta_entrada` | Pasta com os `InventarioForense_*.zip` e `.zip.sha256` (não recursiva). |
+| `pasta_entrada` | Pasta com os `.zip` de coleta (qualquer nome, desde que contenham `Coleta.json`) e os `.zip.sha256` (não recursiva). |
 | `-o PASTA_SAIDA` | Onde criar `Consolidacao_<data>/`. Padrão: a própria pasta de entrada. |
 | `--mapa ARQUIVO.csv` | Mapa de softwares a usar. Padrão: `MapaSoftwares.csv` ao lado do script; se não existir, o mapa embutido. |
 | `--aceitar-nao-verificadas` | Inclui coletas sem `.zip.sha256` ou com hash divergente, marcadas como `NaoVerificada`. |

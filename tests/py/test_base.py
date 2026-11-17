@@ -55,3 +55,45 @@ class TestBase(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class TestBaseSemLock(unittest.TestCase):
+    """Filesystems de rede (CIFS/NFS sem lockd) nao suportam o lock do SQLite."""
+
+    def test_fallback_sem_lock(self):
+        import sqlite3
+        import tempfile
+        from unittest import mock
+
+        real = sqlite3.connect
+        chamadas = []
+
+        class ConLock:
+            def __init__(self, con):
+                self._c = con
+
+            def execute(self, sql, *a):
+                if sql.startswith('CREATE TABLE'):
+                    raise sqlite3.OperationalError('database is locked')
+                return self._c.execute(sql, *a)
+
+            def close(self):
+                self._c.close()
+
+        def falso(alvo, *a, **kw):
+            chamadas.append(alvo)
+            con = real(alvo, *a, **kw)
+            return con if kw.get('uri') else ConLock(con)
+
+        with tempfile.TemporaryDirectory() as d:
+            caminho = Path(d) / 'b.sqlite'
+            with mock.patch.object(cc.sqlite3, 'connect', falso):
+                con = cc.abrir_base(caminho)
+            con.execute("INSERT INTO coletas (IdColeta) VALUES ('X')")
+            con.commit()
+            con.close()
+            self.assertEqual(len(chamadas), 2)
+            self.assertIn('nolock', chamadas[1])
+            lido = real(str(caminho))
+            self.assertEqual(lido.execute('SELECT IdColeta FROM coletas').fetchall(), [('X',)])
+            lido.close()
